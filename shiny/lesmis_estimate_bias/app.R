@@ -1,12 +1,52 @@
 library(shiny)
 
 source('../lesmis.R')
+source('../../experiments/adversary-experiment.R')
+
+
+test.single.config <- function(idx, configs, trials=1, all=TRUE) { 
+  cat("Running", idx, "\n")
+  print(configs[idx,])
+  
+  results <- data.frame(index=numeric(), size.of.dom=logical(), method=character(), 
+                        pt.uncovered=numeric(), adversary.influence=numeric(), ATE.true=numeric(), 
+                        variable=numeric(), value=numeric(), pt.covered=numeric(), n=numeric(), 
+                        graph.type=character(), power=numeric(), degree=numeric(), p=numeric(), 
+                        mu=numeric(), ncoms=numeric(), maxc=numeric(), minc=numeric(), 
+                        lambda_0=numeric(), lambda_1=numeric(), lambda_2=numeric(), stringsAsFactors=FALSE)
+  
+  graph.params <- build.graph.params(configs, idx)
+  adversary.params <- list()
+  adversary.params$model <- reduction.adv.model
+  adversary.params$all <- all
+  outcome.params <- build.outcome.params(configs[idx,"lambda_0"], configs[idx,"lambda_1"], configs[idx,"lambda_2"], configs[idx,"sd.noise"])
+  clustering <- "infomap"
+  
+  for(i in 1:trials) {
+    graph.params$ind <- i
+    
+    cat("trial", i, "\n")
+    bias.behavior.ATE <- adversary.experiment(graph.params, clustering, adversary.params, outcome.params)
+    bias.behavior.ATE$adversary.influence <- as.numeric(bias.behavior.ATE$adversary.influence)
+    bias.behavior.ATE$gui.beta <- as.numeric(bias.behavior.ATE$gui.beta)
+    bias.behavior.ATE$gui.gamma <- as.numeric(bias.behavior.ATE$gui.gamma)
+    
+    bias.behavior.ATE <- add.graph.params(bias.behavior.ATE, graph.params)
+    bias.behavior.ATE <- add.outcome.params(bias.behavior.ATE, outcome.params)
+    bias.behavior.ATE$graph.id <- configs[idx,"graph.no"]
+    bias.behavior.ATE$adv.bias <- bias.behavior.ATE$nonadv.ATE - bias.behavior.ATE$ATE.adv.gui
+    
+    results <- rbind(results, bias.behavior.ATE)
+    #write.csv(results, paste0("results/adversary-results-", graph.params$graph.type, "-", idx, ".csv"))
+  }
+}
+
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
   
   # App title ----
-  titlePanel("NCP exposure in Les Mis!"),
+  titlePanel("Bias estimates in Les Mis!"),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -69,7 +109,7 @@ server <- function(input, output) {
     exposure.params <- exposure.probs(ncp.params, graph.properties, treatment.assignments, adversaries)
     print(exposure.params)
     #V(g)$color <- adversaries.deg
-
+    
     bdr <- rep("black", length(V(g)))
     if(length(treatment.assignments) > 2) bdr <- ifelse(treatment.assignments, "green", "black")
     
