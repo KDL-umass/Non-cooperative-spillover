@@ -24,11 +24,9 @@ cite SNAP, other external lib
 **Setup**
 * generate synthetic graphs with graph generation algorithms 
 
-
 #### Stochastic Block Models
-Properties. Citation. 
-Setup: Install the [SBM benchmark algorithm scripts](https://www.santofortunato.net/resources#h.p_u6MEEWAKyhN0); code available from Fortunato et al. 
-Generation instructions
+Properties. Introduced in Lancichinetti, Fortunato, and Radicchi (2008).
+Setup: Install the [SBM benchmark algorithm scripts](https://www.santofortunato.net/resources#h.p_u6MEEWAKyhN0) (LFR benchmark graphs section, Package 1); code available from Fortunato et al. 
 
 #### Small-world graphs
 Properties. Citation. 
